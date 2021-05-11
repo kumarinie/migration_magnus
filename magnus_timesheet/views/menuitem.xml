@@ -7,9 +7,10 @@
         <menuitem id="menu_analytic" name="Time and Billing"
                   parent="menu_analytic_invoicing"
                   sequence="2"/>
-        <menuitem id="menu_action_analytic_invoice"
+        <!-- <menuitem id="menu_action_analytic_invoice"
                   action="action_view_analytic_invoice" name="Draft Invoices"
-                  parent="menu_analytic" sequence="20" />
+                  parent="menu_analytic" sequence="20" /> -->
+                  <!-- view hidden -->
         <menuitem id="menu_analytic_entries" name="Analytic"
                   parent="menu_analytic_invoicing"
                   sequence="2"/>

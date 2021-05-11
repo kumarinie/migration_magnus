@@ -60,7 +60,7 @@ class HrChargeabilityReport(models.Model):
     @api.model_cr
     def init(self):
         """ """
-        uom = self.env.ref('product.product_uom_hour').id
+        uom = self.env.ref('uom.product_uom_hour').id
         tools.drop_view_if_exists(self.env.cr, 'hr_chargeability_report')
         self.env.cr.execute("""
             CREATE OR REPLACE VIEW hr_chargeability_report AS (
@@ -70,7 +70,7 @@ class HrChargeabilityReport(models.Model):
                     aa.user_id as user_id,
                     aa.operating_unit_id as operating_unit_id,
                     aa.department_id as department_id,
-                    emp.external as external,
+                    -- emp.external as external,
                     emp.timesheet_optional as ts_optional,
                     emp.timesheet_no_8_hours_day as ts_no_8_hours_day,
                     SUM(unit_amount) as captured_hours,
@@ -111,7 +111,7 @@ class HrChargeabilityReport(models.Model):
                     dr.date_end, 
                     aa.date, 
                     aa.department_id, 
-                    emp.external, 
+                    -- emp.external, 
                     emp.timesheet_optional, 
                     emp.timesheet_no_8_hours_day
 				ORDER BY aa.date

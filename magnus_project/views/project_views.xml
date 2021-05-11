@@ -35,8 +35,9 @@
                       <group>
                         <group>
                           <field name="analytic_account_related" readonly="1"/>
-                          <field name="linked_operating_unit" />
-                          <field name="operating_unit_ids" widget="many2many_tags" readonly="0"/>
+                          <!-- <field name="linked_operating_unit" /> -->
+                          <!-- commented by deekshith, so source declaration -->
+                          <!-- <field name="operating_unit_ids" widget="many2many_tags" readonly="0"/> -->
                         </group>
                       </group>
                 </xpath>

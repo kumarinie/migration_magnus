@@ -10,14 +10,14 @@ from dateutil.relativedelta import relativedelta
 from openerp.tools.float_utils import float_compare
 
 class HrTimesheetSheet(models.Model):
-    _inherit = "hr_timesheet_sheet.sheet"
+    _inherit = "hr_timesheet.sheet"
     _order = "week_id desc"
 
     def get_week_to_submit(self):
         dt = datetime.now()
         emp_obj = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
         emp_id = emp_obj.id if emp_obj else False
-        timesheets = self.env['hr_timesheet_sheet.sheet'].search([('employee_id', '=', emp_id)])
+        timesheets = self.env['hr_timesheet.sheet'].search([('employee_id', '=', emp_id)])
         logged_weeks = timesheets.mapped('week_id').ids if timesheets else []
         date_range = self.env['date.range']
         date_range_type_cw_id = self.env.ref(
@@ -69,7 +69,7 @@ class HrTimesheetSheet(models.Model):
     def _get_week_domain(self):
         emp_id = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
         emp_id = emp_id.id if emp_id else False
-        timesheets = self.env['hr_timesheet_sheet.sheet'].search([('employee_id', '=', emp_id)])
+        timesheets = self.env['hr_timesheet.sheet'].search([('employee_id', '=', emp_id)])
         logged_weeks = timesheets.mapped('week_id').ids if timesheets else []
         date_range_type_cw_id = self.env.ref(
             'magnus_date_range_week.date_range_calender_week').id
@@ -229,7 +229,7 @@ class HrTimesheetSheet(models.Model):
             if new_user_id:
                 self.env.cr.execute('''
                         SELECT id
-                        FROM hr_timesheet_sheet_sheet
+                        FROM hr_timesheet_sheet
                         WHERE week_id=%s
                         AND user_id=%s''',
                         (sheet.week_id.id, new_user_id)
@@ -258,7 +258,7 @@ class HrTimesheetSheet(models.Model):
                 ('date_end', '=', date_end)
             ], limit=1)
             if last_week:
-                last_week_timesheet = self.env['hr_timesheet_sheet.sheet'].search([
+                last_week_timesheet = self.env['hr_timesheet.sheet'].search([
                     ('employee_id', '=', self.employee_id.id),
                     ('week_id', '=', last_week.id)
                 ], limit=1)
@@ -339,7 +339,7 @@ class HrTimesheetSheet(models.Model):
             if not overtime_project:
                 raise ValidationError(_("Please define project with 'Overtime Hours'!"))
 
-            uom = self.env.ref('product.product_uom_hour').id
+            uom = self.env.ref('uom.product_uom_hour').id
             analytic_line = analytic_line.create({
                 'name':'Overtime line',
                 'account_id':overtime_project.analytic_account_id.id,
@@ -497,7 +497,7 @@ class HrTimesheetSheet(models.Model):
              ON aaa.id = aal.account_id
              LEFT JOIN project_invoicing_properties ip
              ON ip.id = pp.invoice_properties
-             RIGHT JOIN hr_timesheet_sheet_sheet hss
+             RIGHT JOIN hr_timesheet_sheet hss
              ON hss.id = aal.sheet_id
              LEFT JOIN date_range dr 
              ON (dr.type_id = 2 and dr.date_start <= aal.date +7 and dr.date_end >= aal.date + 7)
@@ -616,7 +616,7 @@ class HrTimesheetSheet(models.Model):
              ON aaa.id = aal.account_id
              LEFT JOIN project_invoicing_properties ip
              ON ip.id = pp.invoice_properties
-             RIGHT JOIN hr_timesheet_sheet_sheet hss
+             RIGHT JOIN hr_timesheet_sheet hss
              ON hss.id = aal.sheet_id
              LEFT JOIN date_range dr 
              ON (dr.type_id = 2 and dr.date_start <= aal.date +7 and dr.date_end >= aal.date + 7)

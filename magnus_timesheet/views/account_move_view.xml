@@ -17,7 +17,8 @@
     <record id="view_move_line_form2" model="ir.ui.view">
         <field name="name">account.move.line.form2</field>
         <field name="model">account.move.line</field>
-        <field name="inherit_id" ref="account.view_move_line_form2"/>
+        <!-- <field name="inherit_id" ref="account.view_move_line_form2"/>  edited by deekshith-->
+        <field name="inherit_id" ref="account.view_move_line_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='account_id']" position="after">
                 <field name="user_id"
@@ -40,7 +41,7 @@
         </field>
     </record>
 
-    <record id="view_account_move_line_filter" model="ir.ui.view">
+    <!-- <record id="view_account_move_line_filter" model="ir.ui.view">
         <field name="name">Journal Items</field>
         <field name="model">account.move.line</field>
         <field name="inherit_id" ref="account.view_account_move_line_filter"/>
@@ -51,7 +52,8 @@
                         context="{'group_by':'user_id'}"/>
             </xpath>
         </field>
-    </record>
+    </record> -->
+    <!-- odoo.tools.convert.ParseError: "Invalid view Journal Items definition in magnus_timesheet/views/account_move_view.xml -->
 
 
     <record id="view_move_form" model="ir.ui.view">

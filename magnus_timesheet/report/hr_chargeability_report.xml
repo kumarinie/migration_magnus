@@ -14,8 +14,8 @@
                 </pivot>
             </field>
         </record>
-
-        <record id="view_hr_chargeability_report_search" model="ir.ui.view">
+<!-- invalid View // so its commented -->
+        <!-- <record id="view_hr_chargeability_report_search" model="ir.ui.view">
             <field name="name">hr.chargeability.report.search</field>
             <field name="model">hr.chargeability.report</field>
             <field name="arch" type="xml">
@@ -48,9 +48,10 @@
             <field name="help">Chargeabiltiy analysis allows you to check chargeabiltiy grouping by employee.</field>
             <field name="search_view_id" ref="view_hr_chargeability_report_search"/>
             <field name="context">{'search_default_internal_emp_filter':1}</field>
-        </record>
+        </record> 
 
         <menuitem id="menu_hr_chargeability_report_analysis" parent="hr_timesheet.menu_timesheets_reports" action="action_hr_chargeability_report"
             name="Chargeability Analysis"/>
+            -->
 
 </odoo>

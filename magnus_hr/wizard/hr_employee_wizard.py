@@ -92,8 +92,8 @@ class HREmployeeWizard(models.TransientModel):
         """ Employee and user creation data"""
         hr_employee = self.env['hr.employee']
         hr_users = self.env['res.users']
-        hr_holiday = self.env['hr.holidays']
-        hr_leave_type = self.env['hr.holidays.status'].search([('is_leave_type_of_wizard','=',True)],limit=1)
+        hr_holiday = self.env['hr.leave']
+        hr_leave_type = self.env['hr.leave.status'].search([('is_leave_type_of_wizard','=',True)],limit=1)
         res_partner = self.env['res.partner']
         res_partner_bank = self.env['res.partner.bank']
         account_payment_term = self.env['account.payment.term']

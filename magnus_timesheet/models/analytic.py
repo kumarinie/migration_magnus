@@ -27,9 +27,9 @@ class AccountAnalyticLine(models.Model):
         # because sheet_id does not get a value when sheets is empty, we need the original value.
         # we have to filter self for records existing in db
         self.filtered(lambda i: isinstance(i.id, (int, long))).read(['sheet_id'])
-        uom_hrs = self.env.ref("product.product_uom_hour").id
+        uom_hrs = self.env.ref("uom.product_uom_hour").id
         for ts_line in self.filtered(lambda line: line.task_id and line.product_uom_id.id == uom_hrs):
-            sheets = self.env['hr_timesheet_sheet.sheet'].search(
+            sheets = self.env['hr_timesheet.sheet'].search(
                 [('date_to', '>=', ts_line.date),
                  ('date_from', '<=', ts_line.date),
                  ('employee_id.user_id.id', '=', ts_line.user_id.id),
@@ -52,7 +52,7 @@ class AccountAnalyticLine(models.Model):
                  'user_id'
                  )
     def _compute_analytic_line(self):
-        uom_hrs = self.env.ref("product.product_uom_hour").id
+        uom_hrs = self.env.ref("uom.product_uom_hour").id
         for line in self:
             # all analytic lines need a project_operating_unit_id and
             # for all analytic lines day_name, week_id and month_id are computed
@@ -60,9 +60,9 @@ class AccountAnalyticLine(models.Model):
             line.project_operating_unit_id = \
                 line.account_id.operating_unit_ids \
                 and line.account_id.operating_unit_ids[0] or False
-            line.day_name = str(datetime.strptime(date, '%Y-%m-%d').
+            line.day_name = str(datetime.strptime(str(date), '%Y-%m-%d').
                                 strftime("%m/%d/%Y")) + \
-                            ' (' + datetime.strptime(date, '%Y-%m-%d'). \
+                            ' (' + datetime.strptime(str(date), '%Y-%m-%d'). \
                                 strftime('%a') + ')'
             line.week_id = line.find_daterange_week(date)
             line.month_id = var_month_id = line.find_daterange_month(date)
@@ -396,7 +396,7 @@ class AccountAnalyticLine(models.Model):
 
     @api.onchange('product_id', 'product_uom_id', 'unit_amount', 'currency_id')
     def on_change_unit_amount(self):
-        if self.product_uom_id == self.env.ref("product.product_uom_hour").id:
+        if self.product_uom_id == self.env.ref("uom.product_uom_hour").id:
             return {}
         return super(AccountAnalyticLine, self).on_change_unit_amount()
 

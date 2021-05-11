@@ -11,7 +11,7 @@ class HrEmployee(models.Model):
 
     @api.multi
     def _compute_leaves_count(self):
-        leaves = self.env['hr.holidays'].read_group([
+        leaves = self.env['hr.leave'].read_group([
             ('employee_id', 'in', self.ids),
             ('holiday_status_id.limit', '=', False),
             ('state', '!=', 'refuse')],

@@ -5,10 +5,11 @@
             <field name="model">maintenance.equipment</field>
             <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='owner_user_id']" position="after">
+                <!-- commented by deekshith -->
+                <!-- <xpath expr="//field[@name='owner_user_id']" position="after">
                     <field name="start_date"/>
                     <field name="end_date"/>
-                </xpath>
+                </xpath> -->
                 <xpath expr="//notebook/page[1]" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>

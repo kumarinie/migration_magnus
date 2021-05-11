@@ -18,7 +18,7 @@ class StatusTimeReport(models.Model):
         readonly=True
     )
     sheet_id = fields.Many2one(
-        'hr_timesheet_sheet.sheet',
+        'hr_timesheet.sheet',
         string='Employee',
         readonly=True
     )
@@ -63,18 +63,18 @@ class StatusTimeReport(models.Model):
                 dr.id as week_id,
                 hrc.id as employee_id, 
                 hrc.department_id as department_id,  
-                hrc.external as external,
+                -- hrc.external as external,
                 hrc.timesheet_optional as ts_optional,
                 string_agg(rp.name,',' ORDER BY rp.name ASC) as validators,
                 htsss.state as state
             FROM date_range dr
             CROSS JOIN  hr_employee hrc
-            LEFT JOIN hr_timesheet_sheet_sheet htsss 
+            LEFT JOIN hr_timesheet_sheet htsss 
             ON (dr.id = htsss.week_id and hrc.id = htsss.employee_id)
             LEFT JOIN hr_department hd 
             ON (hd.id = hrc.department_id)
-            LEFT JOIN hr_timesheet_sheet_sheet_res_users_rel validators 
-            ON (htsss.id = validators.hr_timesheet_sheet_sheet_id)
+            LEFT JOIN hr_timesheet_sheet_res_users_rel validators 
+            ON (htsss.id = validators.hr_timesheet_sheet_id)
             LEFT JOIN res_users ru 
             ON (validators.res_users_id = ru.id)
             LEFT JOIN res_partner rp 
