@@ -26,12 +26,12 @@ class AccountAnalyticLine(models.Model):
         # we first get value of sheet_id in cache, because it is empty for all to be computed fields
         # because sheet_id does not get a value when sheets is empty, we need the original value.
         # we have to filter self for records existing in db
-        self.filtered(lambda i: isinstance(i.id, (int, long))).read(['sheet_id'])
+        self.filtered(lambda i: isinstance(i.id, (int))).read(['sheet_id'])
         uom_hrs = self.env.ref("uom.product_uom_hour").id
         for ts_line in self.filtered(lambda line: line.task_id and line.product_uom_id.id == uom_hrs):
             sheets = self.env['hr_timesheet.sheet'].search(
-                [('date_to', '>=', ts_line.date),
-                 ('date_from', '<=', ts_line.date),
+                [('date_end', '>=', ts_line.date),
+                 ('date_start', '<=', ts_line.date),
                  ('employee_id.user_id.id', '=', ts_line.user_id.id),
                  ('state', 'in', ['draft', 'new'])])
             if sheets:
@@ -87,23 +87,23 @@ class AccountAnalyticLine(models.Model):
             task = line.task_id
             user = line.user_id
             # only if task_id the remaining fields are computed
-            if task and user:
-                uou = user._get_operating_unit_id()
-                if uou:
-                    line.operating_unit_id = uou
-                    # if line.planned:
-                    #     line.planned_qty = line.unit_amount
-                    #     line.actual_qty = 0.0
-                    # else:
-                    if line.month_of_last_wip:
-                        line.wip_month_id = line.month_of_last_wip
-                    else:
-                        line.wip_month_id = var_month_id
-                    if line.product_uom_id.id == uom_hrs:
-                        line.ts_line = True
-                        line.line_fee_rate = line.get_fee_rate(task.id, user.id)
-                        line.project_rate = line.get_fee_rate(task.id, user.id, date, True)
-                        line.project_amount = (line.project_rate * line.unit_amount)
+            # if task and user:
+            #     uou = user._get_operating_unit_id()
+            #     if uou:
+            #         line.operating_unit_id = uou
+            #         # if line.planned:
+            #         #     line.planned_qty = line.unit_amount
+            #         #     line.actual_qty = 0.0
+            #         # else:
+            #         if line.month_of_last_wip:
+            #             line.wip_month_id = line.month_of_last_wip
+            #         else:
+            #             line.wip_month_id = var_month_id
+            #         if line.product_uom_id.id == uom_hrs:
+            #             line.ts_line = True
+            #             line.line_fee_rate = line.get_fee_rate(task.id, user.id)
+            #             line.project_rate = line.get_fee_rate(task.id, user.id, date, True)
+            #             line.project_amount = (line.project_rate * line.unit_amount)
                     # line.actual_qty = line.unit_amount
                     # line.planned_qty = 0.0
 

@@ -39,6 +39,8 @@ thereof""",
 
     # any module necessary for this one to work correctly
     'depends': ['account',
+                'analytic',
+                'uom',
                 'hr_timesheet_task_required',
                 'fleet',
                 'magnus_hr',
@@ -62,7 +64,7 @@ thereof""",
 
     # always loaded
     'data': [
-        # 'data/cron_data.xml', commented coz of error
+        'data/cron_data.xml',
         'data/data.xml',
         'security/magnus_security.xml',
         'security/ir.model.access.csv',
@@ -82,11 +84,11 @@ thereof""",
         'views/fleet_view.xml',
         'views/magnus_planning_views.xml',
         # 'views/magnus_planning_templates.xml',
-        # 'views/analytic_invoice.xml', error
+        'views/analytic_invoice.xml',
         'views/product_view.xml',
-        'views/menuitem.xml',
         'views/account_move_view.xml',
         'views/invoice_view.xml',
+        'views/menuitem.xml',
     ],
     'installable': True,
     # only loaded in demonstration mode

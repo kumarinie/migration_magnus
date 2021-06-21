@@ -461,9 +461,9 @@ msgid "Date"
 msgstr "Datum"
 
 #. module: magnus_timesheet
-#: model:ir.model.fields,field_description:magnus_timesheet.field_analytic_invoice_date_from
-#: model:ir.model.fields,field_description:magnus_timesheet.field_magnus_planning_date_from
-#: model:ir.model.fields,field_description:magnus_timesheet.field_magnus_standby_planning_date_from
+#: model:ir.model.fields,field_description:magnus_timesheet.field_analytic_invoice_date_start
+#: model:ir.model.fields,field_description:magnus_timesheet.field_magnus_planning_date_start
+#: model:ir.model.fields,field_description:magnus_timesheet.field_magnus_standby_planning_date_start
 msgid "Date From"
 msgstr "Datum vanaf"
 

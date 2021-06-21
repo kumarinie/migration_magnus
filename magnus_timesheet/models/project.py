@@ -30,15 +30,15 @@ class Task(models.Model):
         track_visibility='always'
     )
 
-    @api.model
-    def name_search(self, name, args=None, operator='ilike', limit=100):
-        args = args or []
-        recs = self.browse()
-        if name:
-            recs = self.search([('name', '=', name)] + args, limit=limit)
-        if not recs:
-            recs = self.search(['|',('name', operator, name), ('jira_compound_key', operator, name)] + args, limit=limit)
-        return recs.name_get()
+    # @api.model
+    # def name_search(self, name, args=None, operator='ilike', limit=100):
+    #     args = args or []
+    #     recs = self.browse()
+    #     if name:
+    #         recs = self.search([('name', '=', name)] + args, limit=limit)
+    #     if not recs:
+    #         recs = self.search(['|',('name', operator, name), ('jira_compound_key', operator, name)] + args, limit=limit)
+    #     return recs.name_get()
 
 
 class Project(models.Model):
@@ -115,8 +115,8 @@ class TaskUser(models.Model):
     )
 
     from_date = fields.Date(
-        string='From Date',
-        default=datetime.today()
+        string='From Date'
+        # default=datetime.today()
     )
     user_ids = fields.Many2many(
         'res.users',

@@ -28,9 +28,9 @@
                 <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='origin']" position="attributes">
                     <attribute name="invisible">False</attribute>
                 </xpath>
-                <!-- <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='operating_unit_id']" position="before">
+                <xpath expr="//field[@name='invoice_line_ids']/tree" position="inside">
                     <field name="user_id"/>
-                </xpath> -->
+                </xpath>
                 <xpath expr="//field[@name='payment_term_id']" position="after">
                     <field name="month_id" />
                 </xpath>

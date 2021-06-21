@@ -6,11 +6,13 @@
             <field name="domain">[('project_id', '!=', False),('planned', '=', False)]</field>
         </record>
 
-        <!-- <record id="hr_timesheet_line_forecating_tree" model="ir.ui.view">
-            <field name="name">Timesheet with lead/opportunity</field>
+        <record id="hr_timesheet_line_forecating_tree" model="ir.ui.view">
+            <field name="name">timesheet.with.lead.opportunity.tree</field>
             <field name="model">account.analytic.line</field>
             <field name="arch" type="xml">
-               <tree string="Timesheet" create="false" edit="false" delete="true" copy="false">
+               <tree string="Timesheet" create="false" edit="false" delete="true">
+                <!-- removed copy="false" from tree definition -->
+                <!-- <tree string="Timesheet" create="false" edit="false" delete="true" copy="false"> -->
                     <field name="date" />
                     <field name="state"/>
                     <field name="user_id" />
@@ -23,7 +25,7 @@
                     <field name="planned_qty" invisible="1"/>
                </tree>
             </field>
-        </record> -->
+        </record>
 
         <record id="view_account_analytic_line_pivot_forecate" model="ir.ui.view">
             <field name="name">account.analytic.line.pivot</field>
@@ -52,13 +54,13 @@
             </field>
         </record>
 
-        <!-- <record model="ir.actions.act_window.view" id="act_hr_timesheet_line_forecast_view_tree">
+        <record model="ir.actions.act_window.view" id="act_hr_timesheet_line_forecast_view_tree">
             <field name="view_mode">tree</field>
             <field name="sequence">2</field>
             <field name="view_id" ref="hr_timesheet_line_forecating_tree"/>
             <field name="act_window_id" ref="act_hr_timesheet_line_forecast"/>
         </record>
- -->
+
         <record model="ir.actions.act_window.view" id="act_hr_timesheet_line_forecast_view_pivot">
             <field name="view_mode">pivot</field>
             <field name="sequence">1</field>
@@ -77,12 +79,15 @@
                 <field name="name" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </field>
-                    <field name="project_id" position="before">
+                <field name="project_id" position="before">
                     <field name="week_id" string="Timesheet Week"/>
                 </field>
-                <!-- <field name="user_id" position="after">
+                <field name="task_id" position="after">
                     <field name="operating_unit_id"/>
-                </field> -->
+                </field>
+                <field name="unit_amount" position="after">
+                    <field name="kilometers"/>
+                </field>
             </field>
         </record>
 
@@ -112,17 +117,13 @@
             </field>
         </record>
 
-        <!-- <record id="view_account_analytic_line_filter_inherit_account" model="ir.ui.view">
-            <field name="name">account.analytic.line.select.inherit.account</field>
+        <record id="view_account_analytic_line_filter_inherit_account" model="ir.ui.view">
+            <field name="name">account.analytic.line.inherit</field>
             <field name="model">account.analytic.line</field>
             <field name="inherit_id" ref="analytic.view_account_analytic_line_filter"/>
             <field name="arch" type="xml">
-                <data>
-                    <xpath expr="//field[@name='account_id']" position="replace">
-                    </xpath>
-
                     <xpath expr="//field[@name='name']" position="before">
-                        <filter string="My Projects"
+                        <!-- <filter string="My Projects"
                                 domain="[
                                 '|',
                                 ('project_id.user_id.id', '=', uid),
@@ -135,11 +136,12 @@
                                 context="{u'pivot_column_groupby': [u'month_id'],
                                   u'pivot_row_groupby': [u'project_mgr',u'account_id', u'user_id'],
                                   u'pivot_measures': [u'unit_amount', u'amount']}"/>
-                        <separator />
+                        <separator /> -->
+                        <!-- error comming because of context -->
                         <filter name="hours" string="Hours"
                                 domain="[('product_uom_id','=',%(uom.product_uom_hour)d)]"/>
                         <filter name="kms" string="Kilometers"
-                                domain="[('product_uom_id','=',%(product.product_uom_km)d)]"/>
+                                domain="[('product_uom_id','=',%(uom.product_uom_km)d)]"/>
                         <filter name="cost_expense" string="Cost/Expense"
                                 domain="[
                                 ('move_id','!=',False)
@@ -181,17 +183,16 @@
                         <field name="user_id"/>
                         <field name="task_id" />
                     </xpath>
-                    <xpath expr="//group[@name='groupby']" position="after">
+                    <!-- <xpath expr="//group[@name='groupby']" position="inside">
                         <filter string="Project Manager" context="{'group_by':'project_mgr'}"/>
                         <filter string="Professional" context="{'group_by':'user_id'}"/>
                         <filter string="Task" context="{'group_by':'task_id'}"/>
                         <filter string="Measure" context="{'group_by':'product_uom_id'}"/>
                         <filter string="Project Rate" context="{'group_by':'project_rate'}"/>
                         <filter string="Status" context="{'group_by':'state'}"/>
-                    </xpath>
-                </data>
+                    </xpath> -->
             </field>
-        </record> -->
+        </record>
 
         <record id="view_account_analytic_line_pivot" model="ir.ui.view">
             <field name="name">account.analytic.line.pivot</field>
@@ -275,13 +276,13 @@
             </field>
         </record>
 <!--        Adding Account analytic line's account moves when state in delay in list view-->
-        <!-- <record id="view_account_analytic_line_move_tree_form_magnus" model="ir.ui.view">
+        <record id="view_account_analytic_line_move_tree_form_magnus" model="ir.ui.view">
             <field name="name">account.analytic.line.move.tree.form.magnus</field>
             <field name="model">account.analytic.line</field>
             <field name="inherit_id" ref="analytic.view_account_analytic_line_form"/>
             <field name="groups_id" eval="[(6, 0, [ref('account.group_account_invoice')])]"/>
             <field name="arch" type="xml">
-                <xpath expr="//sheet" position="inside">
+                <xpath expr="//form" position="inside">
                     <notebook name="Account Analytic Lines">
                         <page string="Analytic Move Lines">
                             <field name="account_analy_line_ids" widget="one2many_list">
@@ -300,7 +301,7 @@
                 </xpath>
             </field>
         </record>
- -->
+
         <menuitem id="menu_hr_working_planned_vs_actual" parent="hr_timesheet.menu_timesheets_reports" action="act_hr_timesheet_line_planned_vs_actual"
             name="Planned vs. Actual Activity Analysis" sequence="9" groups="group_planning_forecasting"/>
 
