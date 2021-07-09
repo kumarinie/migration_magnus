@@ -32,7 +32,7 @@ class MagnusPlanning(models.Model):
 
     def _default_date_from(self):
         user = self.env['res.users'].browse(self.env.uid)
-        r = user.company_id and user.company_id.timesheet_range or 'month'
+        r = user.company_id and user.company_id.sheet_range or 'month'
         if r == 'month':
             return time.strftime('%Y-%m-01')
         elif r == 'week':
@@ -43,7 +43,7 @@ class MagnusPlanning(models.Model):
 
     def _default_date_to(self):
         user = self.env['res.users'].browse(self.env.uid)
-        r = user.company_id and user.company_id.timesheet_range or 'month'
+        r = user.company_id and user.company_id.sheet_range or 'month'
         if r == 'month':
             return (datetime.today() + relativedelta(months=+1, day=1, days=-1)).strftime('%Y-%m-%d')
         elif r == 'week':
@@ -205,7 +205,7 @@ class MagnusPlanning(models.Model):
         else:
             date = datetime.now().date()
             period = self.env['date.range'].search(
-                [('type_id.calender_week', '=', False), ('type_id.fiscal_year', '=', False), ('type_id.fiscal_month', '=', False), ('date_start', '<=', date), ('date_end', '>=', date)])
+                [('type_id.calender_week', '=', False), ('type_id.fiscal_month', '=', False), ('date_start', '<=', date), ('date_end', '>=', date)])
             vals['planning_quarter'] = period.id
             data = {'planning_quarter': [('id', 'in', period.ids)]}
         self._compute_emp_domain()

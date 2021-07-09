@@ -21,6 +21,8 @@ class Project(models.Model):
         string='Contract/Analytic',
         )
     wbso = fields.Boolean('WBSO')
+    linked_operating_unit = fields.Boolean(string="Linked Operating Unit",related="analytic_account_id.linked_operating_unit")
+    operating_unit_ids = fields.Many2many('operating.unit',string="Operating Units",related="analytic_account_id.operating_unit_ids")
 
     @api.multi
     def name_get(self):

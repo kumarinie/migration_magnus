@@ -86,7 +86,7 @@ class AnalyticLineStatus(models.TransientModel):
             self.env.cr.execute("""
                 UPDATE account_analytic_line SET state = '%s' WHERE id %s %s
                 """ % (status, cond, rec))
-            self.env.invalidate_all()
+            self.env.cache.invalidate()
             if status == 'delayed' and self.wip:
                 # self.validate_entries_month(analytic_ids)
                 # self.update_line_fee_rates(analytic_ids)
@@ -400,7 +400,7 @@ class AnalyticLineStatus(models.TransientModel):
                                 UPDATE account_analytic_line SET state = '%s' WHERE id=%s
                                 """ % (state,id))
                 self.env.cr.commit()
-                self.env.invalidate_all()
+                self.env.cache.invalidate()
             raise FailedJobError(
                 _("The details of the error:'%s'") % (unicode(e)))
         vals = [account_move.id]

@@ -79,7 +79,9 @@ class HrTimesheetSheet(models.Model):
 		emp_id = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
 		emp_id = emp_id.id if emp_id else False
 		timesheets = self.env['hr_timesheet.sheet'].search([('employee_id', '=', emp_id)])
+		print("----------print timesheet of this employee",emp_id)
 		logged_weeks = timesheets.mapped('week_id').ids if timesheets else []
+		print("----------print timesheet generrated",logged_weeks)
 		date_range_type_cw_id = self.env.ref(
 			'magnus_date_range_week.date_range_calender_week').id
 		return [('type_id','=', date_range_type_cw_id), ('active','=',True), ('id', 'not in', logged_weeks)]
@@ -370,7 +372,7 @@ class HrTimesheetSheet(models.Model):
 								UPDATE account_analytic_line SET state = 'draft' WHERE id %s %s;
 								DELETE FROM account_analytic_line WHERE ref_id %s %s;
 						""" % (cond, rec, cond, rec))
-			self.env.invalidate_all()
+			self.env.cache.invalidate()
 		if self.odo_log_id:
 			self.env['fleet.vehicle.odometer'].sudo().search([('id', '=', self.odo_log_id.id)]).unlink()
 			self.odo_log_id = False
@@ -415,7 +417,7 @@ class HrTimesheetSheet(models.Model):
 				'account_id':overtime_project.analytic_account_id.id,
 				'project_id':overtime_project.id,
 				'task_id':overtime_project_task.id,
-				'date':self.date_to,
+				'date':self.date_end,
 				'unit_amount':self.overtime_hours,
 				'product_uom_id':uom,
 				'ot':True,
@@ -591,7 +593,7 @@ class HrTimesheetSheet(models.Model):
 									'sheet_aal': self.id,
 									}
 							)
-		# self.env.invalidate_all()
+		self.env.cache.invalidate()
 		return True
 
 	def generate_km_lines(self):
@@ -616,7 +618,7 @@ class HrTimesheetSheet(models.Model):
 				general_account_id,
 				move_id,
 				product_id,
-				amount_currency,
+				-- amount_currency,
 				project_id,
 				department_id,
 				task_id,
@@ -655,7 +657,7 @@ class HrTimesheetSheet(models.Model):
 				aal.general_account_id as general_account_id,
 				aal.move_id as move_id,
 				aal.product_id as product_id,
-				aal.amount_currency as amount_currency,
+				-- aal.amount_currency as amount_currency,
 				aal.project_id as project_id,
 				aal.department_id as department_id,
 				aal.task_id as task_id,
@@ -700,11 +702,11 @@ class HrTimesheetSheet(models.Model):
 		"""
 		self.env.cr.execute(query, {'create': str(fields.Datetime.to_string(fields.datetime.now())),
 									'week_id_aal': self.week_id.id,
-									'uom': self.env.ref('product.product_uom_km').id,
+									'uom': self.env.ref('uom.product_uom_km').id,
 									'sheet_select': self.id,
 									}
 							)
-		self.env.invalidate_all()
+		self.env.cache.invalidate()
 		return True
 
 

@@ -230,7 +230,7 @@ class ProjectInvoicingProperties(models.Model):
         if project:
             analytic_lines = self.env['account.analytic.line'].search([
                 ('project_id', 'in', project.ids),
-                ('product_uom_id', '=', self.env.ref('product.product_uom_km').id)
+                ('product_uom_id', '=', self.env.ref('uom.product_uom_km').id)
             ])
             if analytic_lines:
                 non_invoiceable_mileage = False if self.invoice_mileage else True
@@ -241,4 +241,4 @@ class ProjectInvoicingProperties(models.Model):
                     rec = tuple(analytic_lines.ids)
                 self.env.cr.execute("""
                     UPDATE account_analytic_line SET product_uom_id = %s, non_invoiceable_mileage = %s WHERE id %s %s
-                """ % (self.env.ref('product.product_uom_km').id, non_invoiceable_mileage, cond, rec))
+                """ % (self.env.ref('uom.product_uom_km').id, non_invoiceable_mileage, cond, rec))

@@ -164,9 +164,9 @@
             <field name="model">hr.expense</field>
             <field name="inherit_id" ref="hr_expense_operating_unit.view_expenses_form"/>
             <field name="arch" type="xml">
-               <!-- <xpath expr="//field[@name='operating_unit_id']" position="attributes">
+                <xpath expr="//field[@name='operating_unit_id']" position="attributes">
                     <attribute name="readonly">True</attribute>
-                </xpath>-->
+                </xpath>
                 <xpath expr="//field[@name='analytic_account_id']" position="attributes">
                     <attribute name="domain">[('linked_operating_unit','=',True)]</attribute>
                 </xpath>

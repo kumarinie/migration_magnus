@@ -87,23 +87,23 @@ class AccountAnalyticLine(models.Model):
             task = line.task_id
             user = line.user_id
             # only if task_id the remaining fields are computed
-            # if task and user:
-            #     uou = user._get_operating_unit_id()
-            #     if uou:
-            #         line.operating_unit_id = uou
-            #         # if line.planned:
-            #         #     line.planned_qty = line.unit_amount
-            #         #     line.actual_qty = 0.0
-            #         # else:
-            #         if line.month_of_last_wip:
-            #             line.wip_month_id = line.month_of_last_wip
-            #         else:
-            #             line.wip_month_id = var_month_id
-            #         if line.product_uom_id.id == uom_hrs:
-            #             line.ts_line = True
-            #             line.line_fee_rate = line.get_fee_rate(task.id, user.id)
-            #             line.project_rate = line.get_fee_rate(task.id, user.id, date, True)
-            #             line.project_amount = (line.project_rate * line.unit_amount)
+            if task and user:
+                uou = user._get_operating_unit_id()
+                if uou:
+                    line.operating_unit_id = uou
+                    # if line.planned:
+                    #     line.planned_qty = line.unit_amount
+                    #     line.actual_qty = 0.0
+                    # else:
+                    if line.month_of_last_wip:
+                        line.wip_month_id = line.month_of_last_wip
+                    else:
+                        line.wip_month_id = var_month_id
+                    if line.product_uom_id.id == uom_hrs:
+                        line.ts_line = True
+                        line.line_fee_rate = line.get_fee_rate(task.id, user.id)
+                        line.project_rate = line.get_fee_rate(task.id, user.id, date, True)
+                        line.project_amount = (line.project_rate * line.unit_amount)
                     # line.actual_qty = line.unit_amount
                     # line.planned_qty = 0.0
 
@@ -410,7 +410,7 @@ class AccountAnalyticLine(models.Model):
             self.env.cr.execute("""
                                UPDATE %s SET state = '%s' WHERE id %s %s
                                """ % (self._table, state, cond, rec))
-            self.env.invalidate_all()
+            self.env.cache.invalidate()
             vals.pop('state')
             return True
 

@@ -93,7 +93,7 @@ class HrTimesheetSheet(models.Model):
     def action_timesheet_done(self):
         res = super(HrTimesheetSheet, self).action_timesheet_done()
         if self.timesheet_ids:
-            date_from = datetime.strptime(self.date_from, "%Y-%m-%d").date()
+            date_from = datetime.strptime(str(self.date_start), "%Y-%m-%d").date()
             for i in range(7):
                 date = datetime.strftime(date_from + timedelta(days=i), "%Y-%m-%d")
                 hour = sum(self.env['account.analytic.line'].search([('date', '=', date), ('sheet_id', '=', self.id), ('sheet_id.employee_id', '=', self.employee_id.id), ('project_id.holiday_consumption', '=', True)]).mapped('unit_amount'))
