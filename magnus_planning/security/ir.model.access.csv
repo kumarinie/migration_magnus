@@ -1,3 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_magnus_planning,magnus.planning.user,model_magnus_planning,magnus_planning.group_magnus_planning_user,1,1,0,0
-access_magnus_planning_line,magnus.planning.line.user,model_magnus_planning_line,magnus_planning.group_magnus_planning_user,1,1,0,0
+access_magnus_planning,magnus.planning.user,model_magnus_planning,base.group_user,1,1,0,0
+access_magnus_planning_line,magnus.planning.line.user,model_magnus_planning_line,base.group_user,1,1,0,0

@@ -32,7 +32,6 @@ up a management by affair.
         # 'report/magnus_planning_report_view.xml',
         # 'report/report_planning_templates.xml',
         'views/hr_planning_views.xml',
-        # 'data/magnus_planning_data.xml',
     ],
 
     'installable': True,

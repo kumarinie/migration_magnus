@@ -449,7 +449,7 @@ class MagnusPlanning(models.Model):
     @api.model
     def _matrix_key_attributes(self):
         """ Hook for extensions """
-        return ['date', 'project_id', 'task_id']
+        return ['date', 'project_id','employee_id','week_id']
 
     @api.model
     def _matrix_key(self):
@@ -458,10 +458,14 @@ class MagnusPlanning(models.Model):
     @api.model
     def _get_matrix_key_values_for_line(self, aal):
         """ Hook for extensions """
+        week_id = self.env['date.range'].search([('date_start','=',aal.date),('type_id.calender_week','=',True)])
         return {
-            'date': aal.date,
+            # 'date': aal.date,
+            'date': week_id.date_start,
+            'week_id':week_id,
             'project_id': aal.project_id,
-            'task_id': aal.task_id,
+            # 'task_id': aal.task_id,
+            'employee_id': aal.employee_id,
         }
 
     @api.model
@@ -489,10 +493,12 @@ class MagnusPlanning(models.Model):
                 matrix[key] = empty_line
             matrix[key] += line
         for date in self._get_dates():
+            week_id = self.env['date.range'].search([('date_start','=',date),('type_id.calender_week','=',True)])
             for key in matrix.copy():
                 key = MatrixKey(**{
                     **key._asdict(),
                     'date': date,
+                    'week_id':week_id
                 })
                 if key not in matrix:
                     matrix[key] = empty_line
@@ -680,15 +686,16 @@ class MagnusPlanning(models.Model):
         })
 
     def _get_date_name(self, date):
-        name = babel.dates.format_skeleton(
-            skeleton='MMMEd',
-            datetime=datetime.combine(date, time.min),
-            locale=(
-                self.env.context.get('lang') or self.env.user.lang or 'en_US'
-            ),
-        )
-        name = re.sub(r'(\s*[^\w\d\s])\s+', r'\1\n', name)
-        name = re.sub(r'([\w\d])\s([\w\d])', u'\\1\u00A0\\2', name)
+        # name = babel.dates.format_skeleton(
+        #     skeleton='MMMEd',
+        #     datetime=datetime.combine(date, time.min),
+        #     locale=(
+        #         self.env.context.get('lang') or self.env.user.lang or 'en_US'
+        #     ),
+        # )
+        # name = re.sub(r'(\s*[^\w\d\s])\s+', r'\1\n', name)
+        # name = re.sub(r'([\w\d])\s([\w\d])', u'\\1\u00A0\\2', name)
+        name = date
         return name
 
     def _get_dates(self):
@@ -700,7 +707,7 @@ class MagnusPlanning(models.Model):
         while start != end:
             start += relativedelta(days=7)
             dates.append(start)
-        print ('\n\n\ndates----------\n', dates)
+        # print ('\n\n\ndates----------\n', dates)
         return dates
 
     @api.multi
@@ -727,12 +734,16 @@ class MagnusPlanning(models.Model):
     @api.multi
     def _get_default_sheet_line(self, matrix, key):
         self.ensure_one()
+        week_date = self._get_date_name(key.week_id)
+        week_id = self.env['date.range'].search([('id','=',week_date.id),('type_id.calender_week','=',True)])
         values = {
-            'value_x': self._get_date_name(key.date),
+            # 'value_x': self._get_date_name(key.date),
+            'value_x':week_id.name,
             'value_y': self._get_line_name(**key._asdict()),
             'date': key.date,
+            'week_id':week_id.id,
             'project_id': key.project_id.id,
-            'task_id': key.task_id.id,
+            # 'task_id': key.task_id.id,
             'unit_amount': sum(t.unit_amount for t in matrix[key]),
             'employee_id': self.employee_id.id,
             'company_id': self.company_id.id,
