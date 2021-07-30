@@ -150,10 +150,10 @@
                         </page>
                         <page string="Details">
                             <field
-                                name="planning_ids"
+                                name="planning_analytic_ids"
                                 nolabel="1"
                                 context="{'user_id': user_id}">
-                                <tree editable="bottom" string="Timesheet Activities">
+                                <tree editable="bottom" string="Planning Activities">
                                     <field name="date"/>
                                     <field name="employee_id" readonly="1"/>
                                     <field name="project_id" required="1"/>
@@ -162,7 +162,7 @@
                                     <field name="unit_amount" widget="float_time" string="Hours" sum="Hours"/>
                                     <field name="user_id" invisible="1"/>
                                 </tree>
-                                <form string="Timesheet Activities">
+                                <form string="Planning Activities">
                                     <group>
                                         <field name="date"/>
                                         <field name="name"/>

@@ -130,6 +130,16 @@ class MagnusPlanning(models.Model):
             'draft': [('readonly', False)],
         },
     )
+    planning_analytic_ids = fields.One2many(
+        comodel_name='timesheet.analytic.line',
+        inverse_name='planning_analytic_id',
+        string='Planning',
+        readonly=True,
+        states={
+            'new': [('readonly', False)],
+            'draft': [('readonly', False)],
+        },
+    )
     line_ids = fields.One2many(
         comodel_name='magnus.planning.line',
         compute='_compute_line_ids',
@@ -246,10 +256,11 @@ class MagnusPlanning(models.Model):
                     period_end,
                 )
 
-    @api.depends('planning_ids.unit_amount')
+    @api.depends('planning_analytic_ids.unit_amount')
     def _compute_total_time(self):
+        # need to add logic for timesheet.analytic.line as well
         for sheet in self:
-            sheet.total_time = sum(sheet.mapped('planning_ids.unit_amount'))
+            sheet.total_time = sum(sheet.mapped('planning_analytic_ids.unit_amount'))
 
     # @api.multi
     # @api.depends('review_policy')
@@ -486,8 +497,9 @@ class MagnusPlanning(models.Model):
         self.ensure_one()
         MatrixKey = self._matrix_key()
         matrix = {}
-        empty_line = self.env['account.analytic.line']
-        for line in self.planning_ids:
+        # empty_line = self.env['account.analytic.line']
+        empty_line = self.env['timesheet.analytic.line']
+        for line in self.planning_analytic_ids:
             key = MatrixKey(**self._get_matrix_key_values_for_line(line))
             if key not in matrix:
                 matrix[key] = empty_line
@@ -504,45 +516,25 @@ class MagnusPlanning(models.Model):
                     matrix[key] = empty_line
         return matrix
 
-    def _compute_planning_ids(self):
-        AccountAnalyticLines = self.env['account.analytic.line']
+    def _compute_planning_analytic_ids(self):
+        AccountAnalyticLines = self.env['timesheet.analytic.line']
         for sheet in self:
             domain = sheet._get_timesheet_sheet_lines_domain()
             timesheets = AccountAnalyticLines.search(domain)
             sheet.link_timesheets_to_sheet(timesheets)
-            sheet.planning_ids = timesheets
+            sheet.planning_analytic_ids = timesheets
 
     # @api.onchange('date_start', 'date_end', 'employee_id')
     @api.onchange('week_from', 'week_to', 'employee_id')
     def _onchange_scope(self):
-        self._compute_planning_ids()
+        self._compute_planning_analytic_ids()
 
 
-    @api.onchange('planning_ids')
+    @api.onchange('planning_analytic_ids')
     def _onchange_timesheets(self):
         self._compute_line_ids()
 
-    # @api.onchange('add_line_project_id')
-    # def onchange_add_project_id(self):
-    #     """Load the project to the timesheet sheet"""
-    #     if self.add_line_project_id:
-    #         return {
-    #             'domain': {
-    #                 'add_line_task_id': [
-    #                     ('project_id', '=', self.add_line_project_id.id),
-    #                     ('company_id', '=', self.company_id.id),
-    #                     ('id', 'not in',
-    #                      self.planning_ids.mapped('task_id').ids)],
-    #             },
-    #         }
-    #     else:
-    #         return {
-    #             'domain': {
-    #                 'add_line_task_id': [('id', '=', False)],
-    #             },
-    #         }
-    # since the project is selected after employee selection, task related condition is not required
-
+    
     @api.model
     def _check_employee_user_link(self, vals):
         if 'employee_id' in vals:
@@ -777,14 +769,16 @@ class MagnusPlanning(models.Model):
         if existing_unique_ids:
             self.delete_empty_lines(False)
         if frozenset(new_line_unique_id.items()) not in existing_unique_ids:
-            self.planning_ids |= \
-                self.env['account.analytic.line']._planning_create(values)
+            # self.planning_ids |= \
+            #     self.env['account.analytic.line']._planning_create(values)
+            self.planning_analytic_ids |= \
+                self.env['timesheet.analytic.line']._planning_create(values)
 
     def link_timesheets_to_sheet(self, timesheets):
         self.ensure_one()
         if self.id and self.state in ['new', 'draft']:
-            for aal in timesheets.filtered(lambda a: not a.planning_id):
-                aal.write({'planning_id': self.id})
+            for aal in timesheets.filtered(lambda a: not a.planning_analytic_id):
+                aal.write({'planning_analytic_id': self.id})
 
     def clean_timesheets(self, timesheets):
         repeated = timesheets.filtered(lambda t: t.name == empty_name)
@@ -822,15 +816,15 @@ class MagnusPlanning(models.Model):
                 check = not all([l.unit_amount for l in rows])
             if not check:
                 continue
-            row_lines = self.planning_ids.filtered(
+            row_lines = self.planning_analytic_ids.filtered(
                 lambda aal: self._is_line_of_row(aal, row)
             )
             row_lines.filtered(
                 lambda t: t.name == empty_name and not t.unit_amount
             ).unlink()
-            if self.planning_ids != self.planning_ids.exists():
+            if self.planning_analytic_ids != self.planning_analytic_ids.exists():
                 self._sheet_write(
-                    'planning_ids', self.planning_ids.exists())
+                    'planning_analytic_ids', self.planning_analytic_ids.exists())
 
     @api.multi
     def _update_analytic_lines_from_new_lines(self, vals):
@@ -855,7 +849,7 @@ class MagnusPlanning(models.Model):
     def _prepare_new_line(self, line):
         """ Hook for extensions """
         return {
-            'planning_id': line.planning_id.id,
+            'planning_analytic_id': line.planning_id.id,
             'date': line.date,
             'project_id': line.project_id.id,
             'task_id': line.task_id.id,
@@ -1018,12 +1012,12 @@ class SheetNewAnalyticLine(models.TransientModel):
         """ Hook for extensions """
         return aal.date == self.date \
             and aal.project_id.id == self.project_id.id \
-            and aal.task_id.id == self.task_id.id
+            and aal.employee_id.id == self.employee_id.id
 
     @api.model
     def _update_analytic_lines(self):
         sheet = self.planning_id
-        timesheets = sheet.planning_ids.filtered(
+        timesheets = sheet.planning_analytic_ids.filtered(
             lambda aal: self._is_similar_analytic_line(aal)
         )
         new_ts = timesheets.filtered(lambda t: t.name == empty_name)
@@ -1031,7 +1025,7 @@ class SheetNewAnalyticLine(models.TransientModel):
         diff_amount = self.unit_amount - amount
         if len(new_ts) > 1:
             new_ts = new_ts.merge_timesheets()
-            sheet._sheet_write('planning_ids', sheet.planning_ids.exists())
+            sheet._sheet_write('planning_analytic_ids', sheet.planning_analytic_ids.exists())
         if not diff_amount:
             return
         if new_ts:
@@ -1041,11 +1035,12 @@ class SheetNewAnalyticLine(models.TransientModel):
             else:
                 new_ts.unlink()
                 sheet._sheet_write(
-                    'planning_ids', sheet.planning_ids.exists())
+                    'planning_analytic_ids', sheet.planning_analytic_ids.exists())
         else:
             new_ts_values = sheet._prepare_new_line(self)
             new_ts_values.update({
                 'name': empty_name,
                 'unit_amount': diff_amount,
             })
-            self.env['account.analytic.line']._planning_create(new_ts_values)
+            # self.env['account.analytic.line']._planning_create(new_ts_values)
+            self.env['timesheet.analytic.line']._planning_create(new_ts_values)
