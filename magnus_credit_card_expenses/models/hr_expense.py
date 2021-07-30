@@ -34,7 +34,7 @@ class HrExpense(models.Model):
         return super(HrExpense,self).create(vals)
     
     @api.multi
-    def submit_expenses(self):
+    def action_submit_expenses(self):
         if any(expense.state != 'draft' for expense in self):
             raise UserError(_("You cannot report twice the same line!"))
         if len(self.mapped('employee_id')) != 1:
