@@ -32,27 +32,28 @@ class hr_employee_landing_page(models.TransientModel):
             self.next_week_id1 = next_week_id.name
 
         #compute vaction balance
-        self.env.cr.execute("""
-                SELECT allocated_leaves-leaves_taken FROM
-                    (SELECT 
-                        SUM(number_of_hours_temp) as allocated_leaves, employee_id
-                        FROM hr_holidays                               
-                        WHERE employee_id = %s
-                          AND type = %s
-                          AND state = %s
-                        GROUP BY employee_id) hr1
-                    JOIN (SELECT 
-                        SUM(number_of_hours_temp) as leaves_taken, employee_id
-                        FROM hr_holidays                               
-                        WHERE employee_id = %s
-                          AND type = %s
-                          AND state = %s
-                        GROUP BY employee_id ) hr2
-                    on hr1.employee_id = hr2.employee_id
-        """, (self.employee_id.id, 'add', 'validate', self.employee_id.id, 'remove', 'written'))
         vacation_balance = 0
-        for x in self.env.cr.fetchall():
-            vacation_balance += x[0]
+        if self.employee_id:
+            self.env.cr.execute("""
+                    SELECT allocated_leaves-leaves_taken FROM
+                        (SELECT 
+                            SUM(number_of_hours_temp) as allocated_leaves, employee_id
+                            FROM hr_holidays                               
+                            WHERE employee_id = %s
+                              AND type = %s
+                              AND state = %s
+                            GROUP BY employee_id) hr1
+                        JOIN (SELECT 
+                            SUM(number_of_hours_temp) as leaves_taken, employee_id
+                            FROM hr_holidays                               
+                            WHERE employee_id = %s
+                              AND type = %s
+                              AND state = %s
+                            GROUP BY employee_id ) hr2
+                        on hr1.employee_id = hr2.employee_id
+            """, (self.employee_id.id, 'add', 'validate', self.employee_id.id, 'remove', 'written'))
+            for x in self.env.cr.fetchall():
+                vacation_balance += x[0]
 
         self.vacation_balance = vacation_balance
 
@@ -88,15 +89,17 @@ class hr_employee_landing_page(models.TransientModel):
         self.private_km_balance = sum(hr_timesheet.search([('employee_id', '=', self.employee_id.id)]).mapped('private_mileage'))
 
         #my timesheet status
-        self.env.cr.execute("""SELECT 
-                                    id
-                                    FROM hr_timesheet_sheet                               
-                                    WHERE employee_id = %s
-                                    AND state IN %s
-                                    ORDER BY id DESC
-                                    LIMIT 10                                  
-                                        """, (self.employee_id.id, ('draft', 'new', 'confirm'),))
-        timesheet_ids = [x[0] for x in self.env.cr.fetchall()]
+        timesheet_ids = []
+        if self.employee_id:
+            self.env.cr.execute("""SELECT 
+                                        id
+                                        FROM hr_timesheet_sheet                               
+                                        WHERE employee_id = %s
+                                        AND state IN %s
+                                        ORDER BY id DESC
+                                        LIMIT 10                                  
+                                            """, (self.employee_id.id, ('draft', 'new', 'confirm'),))
+            timesheet_ids = [x[0] for x in self.env.cr.fetchall()]
         self.emp_timesheet_status_ids = [(6, 0, timesheet_ids)]
 
         #to be approved timesheet
@@ -116,15 +119,17 @@ class hr_employee_landing_page(models.TransientModel):
         self.emp_timesheet_to_be_approved_ids = [(6, 0, to_be_approved_sheets)]
 
         # my expense status
-        self.env.cr.execute("""SELECT 
-                    id
-                    FROM hr_expense_sheet                               
-                    WHERE employee_id = %s
-                    AND state NOT IN %s
-                    ORDER BY id DESC
-                    LIMIT 10 
-                    """, (self.employee_id.id, ('post', 'done', 'cancel'),))
-        expense_ids = [x[0] for x in self.env.cr.fetchall()]
+        expense_ids = []
+        if self.employee_id:
+            self.env.cr.execute("""SELECT 
+                        id
+                        FROM hr_expense_sheet                               
+                        WHERE employee_id = %s
+                        AND state NOT IN %s
+                        ORDER BY id DESC
+                        LIMIT 10 
+                        """, (self.employee_id.id, ('post', 'done', 'cancel'),))
+            expense_ids = [x[0] for x in self.env.cr.fetchall()]
         self.emp_expense_status_ids = [(6, 0, expense_ids)]
 
         # expense to be approved
