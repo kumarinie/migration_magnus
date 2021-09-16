@@ -156,7 +156,7 @@
 
     <!--My Timesheets action inherited-->
     <record id="hr_timesheet_sheet.act_hr_timesheet_sheet_my_timesheets" model="ir.actions.act_window">
-      <field name="context">{'readonly_by_pass': True}</field>
+      <!-- <field name="context">{'readonly_by_pass': True}</field> -->
       <field name="view_mode">tree,pivot,form</field>
     </record>
 
