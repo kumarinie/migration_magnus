@@ -8,7 +8,7 @@
                     <field name="employee_id"/>
                     <field name="category_id" invisible="1"/>
                     <field name="department_id" invisible="1"/>
-                    <field name="type"/>
+                    <field name="holiday_type"/>
                     <field name="name"/>
                     <field name="number_of_hours" string="Approved Hours" sum="Remaining Hours"/>
                     <field name="date_from"/>
