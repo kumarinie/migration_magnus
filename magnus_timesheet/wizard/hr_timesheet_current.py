@@ -32,7 +32,7 @@ class HrTimesheetCurrentOpen(models.TransientModel):
             'type': 'ir.actions.act_window'
         }
 
-        value['context'] = "{'readonly_by_pass': True}"
+        # value['context'] = "{'readonly_by_pass': True}"
         if 'res_id' not in value:
             sheets = self.env['hr_timesheet.sheet'].search([('user_id', '=', self._uid),
                                                                   ('state', 'in', ('draft', 'new', 'open')),
@@ -77,7 +77,7 @@ class HrTimesheetCurrentOpen(models.TransientModel):
             'res_model': 'magnus.planning',
             'view_id': False,
             'type': 'ir.actions.act_window',
-            'context':{'readonly_by_pass': True}
+            # 'context':{'readonly_by_pass': True}
         }
         if len(planning) == 1:
             value['res_id'] = planning.ids[0]

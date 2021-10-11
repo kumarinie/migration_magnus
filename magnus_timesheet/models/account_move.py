@@ -13,7 +13,7 @@ class AccountMoveLine(models.Model):
 
     user_id = fields.Many2one(
         'res.users',
-        string='Timesheet User'
+        string='Timesheet Users'
     )
     wip_percentage=fields.Float("WIP percentage")
 

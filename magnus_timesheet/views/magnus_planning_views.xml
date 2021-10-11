@@ -40,7 +40,7 @@
                     <group>
                         <group>
                             <label for="planning_quarter" string="Planning Period"/>
-                            <div><field name="planning_quarter" readonly="0" context="{'readonly_by_pass': True}"/></div>
+                            <div><field name="planning_quarter" readonly="0" force_save="1"/></div>
                             <field name="week_from" class="oe_inline" domain="[('type_id.calender_week', '=', True)]" invisible="0"/>
                             <field name="week_to" class="oe_inline" domain="[('type_id.calender_week', '=', True)]" invisible="0"/>
                             <field name="company_id" groups="base.group_multi_company" invisible="1"/>
