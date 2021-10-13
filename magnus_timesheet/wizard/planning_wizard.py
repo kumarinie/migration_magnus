@@ -17,7 +17,7 @@ class PlanningWizard(models.TransientModel):
             period = doc.xpath("//field[@name='name']")[0]
             date = datetime.now().date()
             month_start_date = date.replace(day=1)
-            domain = [('type_id.calender_week', '=', False), ('type_id.fiscal_year', '=', False),
+            domain = [('type_id.calender_week', '=', False),
                  ('type_id.fiscal_month', '=', False), ('date_start', '>=', month_start_date)]
 
             cur_quarter = ctx.get('active_planning_quarter', False)
