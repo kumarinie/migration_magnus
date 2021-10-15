@@ -143,6 +143,7 @@ class MagnusPlanning(models.Model):
 			self.id))
 
 		self.env.cr.execute(line_query)
+
 	def get_planning_from_employees(self):
 		if not self.env.context.get('self_planning', False):
 			child_emp_ids = tuple(set(self.get_employee_child_ids()) - set([self.employee_id.id]))
@@ -177,7 +178,6 @@ class MagnusPlanning(models.Model):
 						child_emp_ids
 						))
 			self.env.cr.execute(line_query)
-
 
 	@api.one
 	def _compute_planning_lines(self):
@@ -263,23 +263,30 @@ class MagnusPlanning(models.Model):
 	#         'draft': [('readonly', False)],
 	#     },
 	# )
-	planning_analytic_ids = fields.One2many(
-		comodel_name='timesheet.analytic.line',
-		inverse_name='planning_analytic_id',
-		string='Planning',
-		readonly=True,
-	)
+	planning_analytic_ids = fields.Many2many(
+		'timesheet.analytic.line',
+		'magnus_planning_analytic_line_rel',
+		'planning_id',
+		'analytic_line_id',
+		string='Planning lines',
+		copy=False)
+	# planning_analytic_ids = fields.One2many(
+	# 	comodel_name='timesheet.analytic.line',
+	# 	inverse_name='planning_analytic_id',
+	# 	string='Planning',
+	# 	# readonly=True,
+	# )
 	line_ids = fields.One2many(
 		comodel_name='magnus.planning.line',
 		compute='_compute_line_ids',
 		string='Planning Lines',
-		readonly=True,
+		readonly=False,
 	)
 	new_line_ids = fields.One2many(
 		comodel_name='magnus.planning.new.analytic.line',
 		inverse_name='planning_id',
 		string='Temporary Plannings',
-		readonly=True,
+		readonly=False,
 	)
 	# state = fields.Char([
 	#     ('new', 'New'),
@@ -432,13 +439,33 @@ class MagnusPlanning(models.Model):
 			company = employee.user_id.company_id
 		return company
 
+	# @api.onchange('employee_id')
+	# def _onchange_employee_id(self):
+	# 	if self.employee_id:
+	# 		company = self._get_timesheet_sheet_company()
+	# 		self.company_id = company
+	# 		# self.review_policy = company.timesheet_sheet_review_policy
+	# 		self.department_id = self.employee_id.department_id
+
 	@api.onchange('employee_id')
-	def _onchange_employee_id(self):
-		if self.employee_id:
-			company = self._get_timesheet_sheet_company()
-			self.company_id = company
-			# self.review_policy = company.timesheet_sheet_review_policy
-			self.department_id = self.employee_id.department_id
+	def onchange_employee_id(self):
+		vals, data = {}, {}
+		# ctx = self.env.context
+		# default_planning_quarter = ctx.get('default_planning_quarter', False)
+		# if default_planning_quarter:
+		# 	data = {'planning_quarter': [('id', '=', default_planning_quarter)]}
+		# else:
+		company = self._get_timesheet_sheet_company()
+		vals['company_id'] = company.id
+		vals['department_id'] = self.employee_id.department_id.id
+		date = datetime.now().date()
+        # ('type_id.fiscal_year', '=', False)
+		period = self.env['date.range'].search(
+			[('type_id.calender_week', '=', False),
+			 ('type_id.fiscal_month', '=', False), ('date_start', '<=', date), ('date_end', '>=', date)])
+		vals['planning_quarter'] = period.ids[0]
+		data = {'planning_quarter': [('id', 'in', period.ids)]}
+		return {'value': vals, 'domain': data}
 
 	@api.multi
 	def _get_timesheet_sheet_lines_domain(self):
@@ -532,8 +559,8 @@ class MagnusPlanning(models.Model):
 		for sheet in self:
 			domain = sheet._get_timesheet_sheet_lines_domain()
 			timesheets = TimesheetAnalyticLines.search(domain)
-			sheet.link_timesheets_to_sheet(timesheets)
-			sheet.planning_analytic_ids = timesheets
+			# sheet.link_timesheets_to_sheet(timesheets)
+			sheet.planning_analytic_ids = [(6, 0, timesheets.ids)]
 
 	# @api.onchange('date_start', 'date_end', 'employee_id')
 	@api.onchange('week_from', 'week_to', 'employee_id')
@@ -560,11 +587,11 @@ class MagnusPlanning(models.Model):
 			return employee.user_id.id
 		return False
 
-	@api.multi
-	def copy(self, default=None):
-		if not self.env.context.get('allow_copy_timesheet'):
-			raise UserError(_('You cannot duplicate a sheet.'))
-		return super().copy(default=default)
+	# @api.multi
+	# def copy(self, default=None):
+	# 	if not self.env.context.get('allow_copy_timesheet'):
+	# 		raise UserError(_('You cannot duplicate a sheet.'))
+	# 	return super().copy(default=default)
 
 	@api.model
 	def create(self, vals):
@@ -683,7 +710,6 @@ class MagnusPlanning(models.Model):
 		while start != end:
 			start += relativedelta(days=7)
 			dates.append(start)
-		# print ('\n\n\ndates----------\n', dates)
 		return dates
 
 	@api.multi
@@ -756,12 +782,14 @@ class MagnusPlanning(models.Model):
 			self.planning_analytic_ids |= \
 				self.env['timesheet.analytic.line']._planning_create(values)
 
-	def link_timesheets_to_sheet(self, timesheets):
-		self.ensure_one()
+	# def link_timesheets_to_sheet(self, timesheets):
+	# 	self.ensure_one()
 		# if self.id and self.state in ['new', 'draft']:
-		if self.id:
-			for aal in timesheets.filtered(lambda a: not a.planning_analytic_id):
-				aal.write({'planning_analytic_id': self.id})
+		#comment for many2many
+		# if self.id:
+			# #self.write({'planning_analytic_ids': [(6, 0, timesheets.ids)]})
+		# 	for aal in timesheets.filtered(lambda a: not a.planning_analytic_id):
+		# 		aal.write({'planning_analytic_id': self.id})
 
 	def clean_timesheets(self, timesheets):
 		repeated = timesheets.filtered(lambda t: t.name == empty_name)
@@ -832,7 +860,8 @@ class MagnusPlanning(models.Model):
 	def _prepare_new_line(self, line):
 		""" Hook for extensions """
 		return {
-			'planning_analytic_id': line.planning_id.id,
+			# comment for many2many
+			# 'planning_analytic_id': line.planning_id.id,
 			'date': line.date,
 			'project_id': line.project_id.id,
 			'employee_id': line.employee_id.id,
@@ -1029,7 +1058,11 @@ class SheetNewAnalyticLine(models.TransientModel):
 				'unit_amount': diff_amount,
 			})
 			# self.env['account.analytic.line']._planning_create(new_ts_values)
-			self.env['timesheet.analytic.line']._planning_create(new_ts_values)
+			planning_analytic_ids = self.env['timesheet.analytic.line']._planning_create(new_ts_values)
+			planning_analytic_ids |= sheet.planning_analytic_ids
+			sheet._sheet_write(
+				'planning_analytic_ids', planning_analytic_ids.exists())
+			
 
 class MagnusStandbyPlanning(models.Model):
 	_name = "magnus.standby.planning"
@@ -1071,7 +1104,6 @@ class HrEmployee(models.Model):
 	@api.multi
 	def name_get(self):
 		res = []
-		# print ('\n\n\n\nempnameget', self, self.env.context)
 		if self.env.context.get('magnus_planning', False):
 			pass
 

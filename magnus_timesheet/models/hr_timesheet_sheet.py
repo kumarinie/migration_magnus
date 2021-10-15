@@ -710,35 +710,35 @@ class HrTimesheetSheet(models.Model):
 		return True
 
 
-class DateRangeGenerator(models.TransientModel):
-	_inherit = 'date.range.generator'
-
-	@api.multi
-	def _compute_date_ranges(self):
-		self.ensure_one()
-		vals = rrule(freq=self.unit_of_time,
-					 interval=self.duration_count,
-					 dtstart=fields.Date.from_string(self.date_start),
-					 count=self.count+1)
-		vals = list(vals)
-		date_ranges = []
-		# count_digits = len(unicode(self.count))
-		count_digits = len(str(self.count))
-		for idx, dt_start in enumerate(vals[:-1]):
-			date_start = fields.Date.to_string(dt_start.date())
-			# always remove 1 day for the date_end since range limits are
-			# inclusive
-			dt_end = vals[idx+1].date() - relativedelta(days=1)
-			date_end = fields.Date.to_string(dt_end)
-			# year and week number are updated for name according to ISO 8601 Calendar
-			date_ranges.append({
-				'name': '%s%d' % (
-					str(dt_start.isocalendar()[0])+" "+self.name_prefix, int(dt_start.isocalendar()[1])),
-				'date_start': date_start,
-				'date_end': date_end,
-				'type_id': self.type_id.id,
-				'company_id': self.company_id.id})
-		return date_ranges
+# class DateRangeGenerator(models.TransientModel):
+# 	_inherit = 'date.range.generator'
+#
+# 	@api.multi
+# 	def _compute_date_ranges(self):
+# 		self.ensure_one()
+# 		vals = rrule(freq=self.unit_of_time,
+# 					 interval=self.duration_count,
+# 					 dtstart=fields.Date.from_string(self.date_start),
+# 					 count=self.count+1)
+# 		vals = list(vals)
+# 		date_ranges = []
+# 		# count_digits = len(unicode(self.count))
+# 		count_digits = len(str(self.count))
+# 		for idx, dt_start in enumerate(vals[:-1]):
+# 			date_start = fields.Date.to_string(dt_start.date())
+# 			# always remove 1 day for the date_end since range limits are
+# 			# inclusive
+# 			dt_end = vals[idx+1].date() - relativedelta(days=1)
+# 			date_end = fields.Date.to_string(dt_end)
+# 			# year and week number are updated for name according to ISO 8601 Calendar
+# 			date_ranges.append({
+# 				'name': '%s%d' % (
+# 					str(dt_start.isocalendar()[0])+" "+self.name_prefix, int(dt_start.isocalendar()[1])),
+# 				'date_start': date_start,
+# 				'date_end': date_end,
+# 				'type_id': self.type_id.id,
+# 				'company_id': self.company_id.id})
+# 		return date_ranges
 
 class SheetLine(models.TransientModel):
 	_inherit = 'hr_timesheet.sheet.line'
