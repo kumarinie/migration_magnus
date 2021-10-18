@@ -22,10 +22,10 @@ class TimesheetAnalyticLine(models.Model):
     currency_id = fields.Many2one(related="company_id.currency_id", string="Currency", readonly=True, store=True, compute_sudo=True)
     user_id = fields.Many2one('res.users', string='User', default=_default_user)
 
-    planning_analytic_id = fields.Many2one(
-        comodel_name='magnus.planning',
-        string='Planning id',
-    )
+    # planning_analytic_id = fields.Many2one(
+    #     comodel_name='magnus.planning',
+    #     string='Planning id',
+    # )
     week_id = fields.Many2one('date.range',string="Week")
 
     planning_sheet_id = fields.Many2one(
@@ -41,7 +41,18 @@ class TimesheetAnalyticLine(models.Model):
     project_id = fields.Many2one('project.project',string="Project")
     account_id = fields.Many2one('account.analytic.account', 'Analytic Account')
 
-   
+    @api.multi
+    def merge_timesheets(self):
+        unit_amount = sum(
+            [t.unit_amount for t in self])
+        amount = sum([t.amount for t in self])
+        self[0].write({
+            'unit_amount': unit_amount,
+            'amount': amount,
+        })
+        self[1:].unlink()
+        return self[0]
+
     @api.model
     def _planning_create(self, values):
         return self.with_context(planning_create=True).create(values)

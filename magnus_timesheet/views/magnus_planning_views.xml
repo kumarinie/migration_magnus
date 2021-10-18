@@ -51,7 +51,7 @@
                         <group>
                             <group name="weeks">
                                 <label for="planning_quarter" string="Planning Period"/>
-                                <div><field name="planning_quarter" domain="[('type_id.name','=','Quarter')]"/></div>
+                                <div><field name="planning_quarter"/></div>
                                 <label for="week_to" string="Timesheet Period" invisible="1"/>
                                 <div style="display: inline;" invisible="1"><field name="week_from" class="oe_inline"/> to <field name="week_to" class="oe_inline"/></div>
                             </group>
