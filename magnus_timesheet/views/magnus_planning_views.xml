@@ -52,8 +52,8 @@
                             <group name="weeks">
                                 <label for="planning_quarter" string="Planning Period"/>
                                 <div><field name="planning_quarter"/></div>
-                                <label for="week_to" string="Timesheet Period" invisible="1"/>
-                                <div style="display: inline;" invisible="1"><field name="week_from" class="oe_inline"/> to <field name="week_to" class="oe_inline"/></div>
+                                <label for="week_to" string="Timesheet Period" invisible="0"/>
+                                <div style="display: inline;" invisible="0"><field name="week_from" class="oe_inline"/> to <field name="week_to" class="oe_inline"/></div>
                             </group>
                             <!--<group name="dates">
                                 <label for="date_start" string="Timesheet Period" invisible="1"/>
@@ -243,7 +243,7 @@
         </record>
 
         <record id="act_magnus_planning_all_plannings" model="ir.actions.act_window">
-            <field name="name">All Planning Sheets</field>
+            <field name="name">My Employee's Planning Sheets</field>
             <field name="res_model">magnus.planning</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,kanban,form</field>
