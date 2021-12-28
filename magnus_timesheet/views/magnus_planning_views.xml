@@ -52,8 +52,8 @@
                             <group name="weeks">
                                 <label for="planning_quarter" string="Planning Period"/>
                                 <div><field name="planning_quarter"/></div>
-                                <label for="week_to" string="Timesheet Period" invisible="0"/>
-                                <div style="display: inline;" invisible="0"><field name="week_from" class="oe_inline"/> to <field name="week_to" class="oe_inline"/></div>
+                                <label for="week_to" string="Timesheet Period" invisible="1"/>
+                                <div style="display: inline;" invisible="1"><field name="week_from" class="oe_inline"/> to <field name="week_to" invisible="1" class="oe_inline"/></div>
                             </group>
                             <!--<group name="dates">
                                 <label for="date_start" string="Timesheet Period" invisible="1"/>
@@ -94,6 +94,7 @@
                                     <group class="oe_edit_only">
                                         <field
                                             name="add_line_project_id"
+                                            domain="[('company_id', '=', company_id), ('allow_timesheets', '=', True)]"
                                             required="0"
                                         />
                                         <field
