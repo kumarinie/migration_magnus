@@ -78,10 +78,10 @@ class MagnusPlanning(models.Model):
 			op = 'NOT IN'
 
 		line_query = ("""
-			DELETE FROM magnus_planning_analytic_line_rel 
+			DELETE FROM magnus_planning_timesheet_analytic_line_rel 
 				WHERE planning_id = {0} AND analytic_line_id IN (
 					SELECT id FROM account_analytic_line WHERE id IN 
-					(SELECT analytic_line_id FROM magnus_planning_analytic_line_rel WHERE planning_id = {0}) 
+					(SELECT analytic_line_id FROM magnus_planning_timesheet_analytic_line_rel WHERE planning_id = {0}) 
 						AND employee_id {1} {2}
 					)
 			""".format(
@@ -89,6 +89,7 @@ class MagnusPlanning(models.Model):
 			op,
 			empIds
 		))
+		# 
 		self.env.cr.execute(line_query)
 	def get_employee_child_ids(self):
 		# get department's manager list
@@ -122,25 +123,26 @@ class MagnusPlanning(models.Model):
 	def get_planning_from_managers(self):
 		line_query = ("""
 						INSERT INTO
-						   magnus_planning_analytic_line_rel
+						   magnus_planning_timesheet_analytic_line_rel
 						   (planning_id, analytic_line_id)
 							SELECT
 								mp.id as planning_id,
 								aal.id as analytic_line_id
 							FROM 
-								account_analytic_line aal
+								timesheet_analytic_line aal
 								JOIN magnus_planning mp ON aal.employee_id = mp.employee_id
-								JOIN magnus_planning_analytic_line_rel rel ON rel.analytic_line_id = aal.id
+								JOIN magnus_planning_timesheet_analytic_line_rel rel ON rel.analytic_line_id = aal.id
 								WHERE aal.week_id >= {0} AND aal.week_id <= {1}
 								AND mp.id = {2} 
 						  EXCEPT
 							SELECT
 							  planning_id, analytic_line_id
-							  FROM magnus_planning_analytic_line_rel
+							  FROM magnus_planning_timesheet_analytic_line_rel
 				""".format(
 			self.week_from.id,
 			self.week_to.id,
 			self.id))
+		print("---------line query",line_query)
 
 		self.env.cr.execute(line_query)
 
@@ -151,25 +153,28 @@ class MagnusPlanning(models.Model):
 		else:
 			op, child_emp_ids = '=', self.employee_id.id
 
+		print("------child emp ids",child_emp_ids)
+
 		self.remove_planning_from_managers(child_emp_ids)
 
 		if child_emp_ids:
+			print("--------executing query")
 			line_query = ("""
 					INSERT INTO
-					   magnus_planning_analytic_line_rel
+					   magnus_planning_timesheet_analytic_line_rel
 					   (planning_id, analytic_line_id)
 						SELECT 
 							{0}, aal.id 
-						  FROM account_analytic_line aal 
+						  FROM timesheet_analytic_line aal 
 						  WHERE 
 							aal.week_id >= {1} AND aal.week_id <= {2}
 							AND aal.id IN (
-								SELECT analytic_line_id FROM magnus_planning_analytic_line_rel WHERE planning_id IN 
+								SELECT analytic_line_id FROM magnus_planning_timesheet_analytic_line_rel WHERE planning_id IN 
 								(SELECT id FROM magnus_planning WHERE employee_id {3} {4}))
 						EXCEPT
 							SELECT
 							  planning_id, analytic_line_id
-							  FROM magnus_planning_analytic_line_rel
+							  FROM magnus_planning_timesheet_analytic_line_rel
 					""".format(
 						self.id,
 						self.week_from.id,
@@ -177,17 +182,22 @@ class MagnusPlanning(models.Model):
 						op,
 						child_emp_ids
 						))
+			print("-fetch from employee query",line_query)
 			self.env.cr.execute(line_query)
 
 	@api.one
 	def _compute_planning_lines(self):
 		self_planning = self.env.context.get('self_planning', False)
 		self.planning_ids_compute = False
+		print("------self plannig",self_planning)
 		if self_planning:
+			print("--------planning from manager")
 			self.get_planning_from_managers()
 		elif self.employee_id.user_id.has_group("magnus_timehseet.group_magnus_planning_officer") or self.employee_id.user_id.has_group("hr.group_hr_user") or self.employee_id.user_id.has_group("hr.group_hr_manager"):
+			print("--------planning from either one of them")
 			self.get_planning_from_employees()
 		else:
+			print("--------planning from manager 2")
 			self.get_planning_from_managers()
 
 	@api.one
@@ -196,14 +206,22 @@ class MagnusPlanning(models.Model):
 
 	@api.onchange('add_line_project_id')
 	def compute_employee_domain(self):
-		my_planning = self.env.context.get('my_planning', False)
+		print("----all context",self.env.context)
+		my_planning = self.env.context.get('default_self_planning')
 		user = self.employee_id.user_id
+		print("------user id",user)
+		print("------My Planning",my_planning)
 		domain = [('user_id', '=', user.id)]
+		# employee_id = self.env['hr.employee'].search([('user_id','=',user.id)])
+
 		if not my_planning:
+			print("---------not my planning")
 			domain = ['|', '|', ('department_id.manager_id.user_id', '=', user.id),
 					  ('department_id.parent_id.manager_id.user_id', '=', user.id),
 					  ('parent_id.user_id', '=', user.id)]
+		print("-----domainsssss",domain)
 		emp_list = self.env['hr.employee'].search(domain).ids
+		print("------employeeee",emp_list)
 		res = {
 			'domain': {
 				'add_line_emp_id': [('id', 'in', emp_list)],
@@ -265,7 +283,7 @@ class MagnusPlanning(models.Model):
 	# )
 	planning_analytic_ids = fields.Many2many(
 		'timesheet.analytic.line',
-		'magnus_planning_analytic_line_rel',
+		'magnus_planning_timesheet_analytic_line_rel',
 		'planning_id',
 		'analytic_line_id',
 		string='Planning lines',
@@ -321,6 +339,8 @@ class MagnusPlanning(models.Model):
 		compute='_compute_total_time',
 		store=True,
 	)
+	is_planning_officer = fields.Boolean('Is Planning Officer')
+	self_planning = fields.Boolean('Self Planning')
 
 	@api.multi
 	@api.depends('week_from', 'week_to')
@@ -487,10 +507,14 @@ class MagnusPlanning(models.Model):
 			if not all([sheet.week_from.date_start, sheet.week_to.date_end]):
 				continue
 			matrix = sheet._get_data_matrix()
+			# print("-------matrix",matrix)
 			vals_list = []
 			for key in sorted(matrix,
 							  key=lambda key: self._get_matrix_sortby(key)):
+				# print("------key check",key)
 				vals_list.append(sheet._get_default_sheet_line(matrix, key))
+
+			# print("------valslist",vals_list)
 				# if sheet.state in ['new', 'draft']:
 				#     sheet.clean_timesheets(matrix[key])
 			sheet.line_ids = SheetLine.create(vals_list)
@@ -508,6 +532,8 @@ class MagnusPlanning(models.Model):
 	def _get_matrix_key_values_for_line(self, aal):
 		""" Hook for extensions """
 		week_id = self.env['date.range'].search([('date_start','=',aal.date),('type_id.calender_week','=',True)])
+		# print("-----------emp id",aal.employee_id.name)
+		# print("-----------alll",aal)
 		return {
 			# 'date': aal.date,
 			'date': week_id.date_start,
@@ -537,8 +563,10 @@ class MagnusPlanning(models.Model):
 		matrix = {}
 		# empty_line = self.env['account.analytic.line']
 		empty_line = self.env['timesheet.analytic.line']
+		# print("---------analytic line ids",self.planning_analytic_ids)
 		for line in self.planning_analytic_ids:
 			key = MatrixKey(**self._get_matrix_key_values_for_line(line))
+			# print("--------------key",key)
 			if key not in matrix:
 				matrix[key] = empty_line
 			matrix[key] += line
@@ -558,6 +586,7 @@ class MagnusPlanning(models.Model):
 		TimesheetAnalyticLines = self.env['timesheet.analytic.line']
 		for sheet in self:
 			domain = sheet._get_timesheet_sheet_lines_domain()
+			# check this
 			timesheets = TimesheetAnalyticLines.search(domain)
 			# sheet.link_timesheets_to_sheet(timesheets)
 			sheet.planning_analytic_ids = [(6, 0, timesheets.ids)]
@@ -607,6 +636,8 @@ class MagnusPlanning(models.Model):
 	def write(self, vals):
 		self._check_employee_user_link(vals)
 		res = super().write(vals)
+		# print("------ write vals",vals)
+		# print("----write context",self.env.context)
 		for rec in self:
 			# if rec.state == 'draft' and \
 			if not self.env.context.get('sheet_write'):
@@ -736,6 +767,7 @@ class MagnusPlanning(models.Model):
 		self.ensure_one()
 		week_date = self._get_date_name(key.week_id)
 		week_id = self.env['date.range'].search([('id','=',week_date.id),('type_id.calender_week','=',True)])
+		# print("-------week id ",week_id.id)
 		values = {
 			# 'value_x': self._get_date_name(key.date),
 			'value_x':week_id.name,
@@ -745,7 +777,7 @@ class MagnusPlanning(models.Model):
 			'project_id': key.project_id.id,
 			# 'task_id': key.task_id.id,
 			'unit_amount': sum(t.unit_amount for t in matrix[key]),
-			'employee_id': self.employee_id.id,
+			'employee_id': key.employee_id.id,
 			'company_id': self.company_id.id,
 		}
 		if self.id:
@@ -754,6 +786,7 @@ class MagnusPlanning(models.Model):
 
 	@api.model
 	def _prepare_empty_analytic_line(self):
+		# this function is
 		return {
 			'name': empty_name,
 			# 'employee_id': self.employee_id.id,
@@ -767,9 +800,11 @@ class MagnusPlanning(models.Model):
 		}
 
 	def add_line(self):
+		# print("---------------add line triggered")
 		if not self.add_line_project_id:
 			return
 		values = self._prepare_empty_analytic_line()
+		print("----------values form empty analytic line",values)
 		new_line_unique_id = self._get_new_line_unique_id()
 		existing_unique_ids = list(set(
 			[frozenset(line.get_unique_id().items()) for line in self.line_ids]
@@ -777,6 +812,8 @@ class MagnusPlanning(models.Model):
 		if existing_unique_ids:
 			self.delete_empty_lines(False)
 		if frozenset(new_line_unique_id.items()) not in existing_unique_ids:
+			print("------------values",values)
+			print(" add line context print",self.env.context)
 			# self.planning_ids |= \
 			#     self.env['account.analytic.line']._planning_create(values)
 			self.planning_analytic_ids |= \
@@ -852,19 +889,24 @@ class MagnusPlanning(models.Model):
 				new_line_ids_list += [line[2].get('new_line_id')]
 		for new_line in self.new_line_ids.exists():
 			if new_line.id in new_line_ids_list:
+				# print("-------calling update lines",new_line)
 				new_line._update_analytic_lines()
 		self.new_line_ids.exists().unlink()
 		self._sheet_write('new_line_ids', self.new_line_ids.exists())
 
 	@api.model
 	def _prepare_new_line(self, line):
+		# print("-----line",line.employee_id.name)
 		""" Hook for extensions """
+		# week_from.date_start, sheet.week_to.date_end
+		
 		return {
 			# comment for many2many
 			# 'planning_analytic_id': line.planning_id.id,
 			'date': line.date,
 			'project_id': line.project_id.id,
 			'employee_id': line.employee_id.id,
+			# 'week_id':week_id.id,
 			# 'task_id': line.task_id.id,
 			'unit_amount': line.unit_amount,
 			'company_id': line.company_id.id,
@@ -993,6 +1035,8 @@ class PlanningLine(models.TransientModel):
 	new_line_id = fields.Integer(
 		default=0,
 	)
+	# can remove if not required
+	week_id = fields.Many2one('date.range',string="Week")
 
 	@api.onchange('unit_amount')
 	def onchange_unit_amount(self):
@@ -1004,6 +1048,8 @@ class PlanningLine(models.TransientModel):
 				'title': _("Warning"),
 				'message': _("Save the planning Sheet first."),
 			}}
+		print("---planning line employee id",sheet.employee_id.name)
+		# in planning line itself current employee id is being showed. Track this and save employee id for each line
 		sheet.add_new_line(self)
 
 	@api.model
@@ -1024,6 +1070,7 @@ class SheetNewAnalyticLine(models.TransientModel):
 
 	@api.model
 	def _is_similar_analytic_line(self, aal):
+		# print("--------aalllllllll",aal)
 		""" Hook for extensions """
 		return aal.date == self.date \
 			and aal.project_id.id == self.project_id.id \
@@ -1035,16 +1082,21 @@ class SheetNewAnalyticLine(models.TransientModel):
 		timesheets = sheet.planning_analytic_ids.filtered(
 			lambda aal: self._is_similar_analytic_line(aal)
 		)
+		# not getting analytic line id on new entry of time --- above
+		# print("------timesheets",timesheets)
 		new_ts = timesheets.filtered(lambda t: t.name == empty_name)
 		amount = sum(t.unit_amount for t in timesheets)
 		diff_amount = self.unit_amount - amount
+		# print("-------diff amount",diff_amount)
 		if len(new_ts) > 1:
+			print("---entered update if")
 			new_ts = new_ts.merge_timesheets()
 			sheet._sheet_write('planning_analytic_ids', sheet.planning_analytic_ids.exists())
 		if not diff_amount:
 			return
 		if new_ts:
 			unit_amount = new_ts.unit_amount + diff_amount
+			# print("-----unit amount",unit_amount)
 			if unit_amount:
 				new_ts.write({'unit_amount': unit_amount})
 			else:
@@ -1052,12 +1104,15 @@ class SheetNewAnalyticLine(models.TransientModel):
 				sheet._sheet_write(
 					'planning_analytic_ids', sheet.planning_analytic_ids.exists())
 		else:
+			# print("---------sheet employee id",sheet.employee_id.name)
+			# print("---------sheet employee id self",self.employee_id.name)
 			new_ts_values = sheet._prepare_new_line(self)
 			new_ts_values.update({
 				'name': empty_name,
 				'unit_amount': diff_amount,
 			})
 			# self.env['account.analytic.line']._planning_create(new_ts_values)
+			print('-----------new ts values',new_ts_values)
 			planning_analytic_ids = self.env['timesheet.analytic.line']._planning_create(new_ts_values)
 			planning_analytic_ids |= sheet.planning_analytic_ids
 			sheet._sheet_write(

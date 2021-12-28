@@ -26,7 +26,15 @@ class TimesheetAnalyticLine(models.Model):
     #     comodel_name='magnus.planning',
     #     string='Planning id',
     # )
-    week_id = fields.Many2one('date.range',string="Week")
+    week_id = fields.Many2one('date.range',string="Week",compute='compute_week_id',store=True)
+
+    @api.depends('date')
+    def compute_week_id(self):
+        for line in self:
+            if line.date:
+                week_id = self.env['date.range'].search([('date_start','=',line.date)])
+                if week_id:
+                    line.week_id = week_id.id
 
     planning_sheet_id = fields.Many2one(
         comodel_name='magnus.planning',

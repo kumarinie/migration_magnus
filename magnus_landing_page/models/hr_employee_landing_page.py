@@ -131,16 +131,6 @@ class hr_employee_landing_page(models.TransientModel):
 			expense_ids = [x[0] for x in self.env.cr.fetchall()]
 		self.emp_expense_status_ids = [(6, 0, expense_ids)]
 
-		# expense to be approved
-		# self.env.cr.execute("""SELECT
-		#                     id
-		#                     FROM hr_expense_sheet
-		#                     WHERE state = 'submit'
-		#                     ORDER BY id
-		#                     LIMIT 10
-		#                     """)
-		# to_be_approved_expense_ids = [x[0] for x in self.env.cr.fetchall()]
-
 		to_be_approved_expense_ids = self.env['hr.expense.sheet'].search([('employee_id', '!=', self.employee_id.id),('state', '=', 'submit')], order='id Desc', limit=10)
 		self.emp_expense_to_be_approved_ids = [(6, 0, to_be_approved_expense_ids.ids)]
 
@@ -178,16 +168,13 @@ class hr_employee_landing_page(models.TransientModel):
 	def action_view_leaves_dashboard(self):
 		self.ensure_one()
 		ir_model_data = self.env['ir.model.data']
-		tree_res = ir_model_data.get_object_reference('magnus_landing_page', 'view_holiday_landing_apge')
+		tree_res = ir_model_data.get_object_reference('magnus_landing_page', 'view_holiday_landing_page')
 		tree_id = tree_res and tree_res[1] or False
 		self.env.cr.execute("""SELECT 
 									id
-									FROM hr_holidays                               
+									FROM hr_leave                               
 									WHERE employee_id = %s
-									AND ((type = 'add'
-									AND state = 'validate' ) OR 
-									(type = 'remove'
-							AND state = 'written'))                  
+									AND (state = 'validate' OR state = 'written')                  
 									""", (self.employee_id.id,))
 
 		holidays = [x[0] for x in self.env.cr.fetchall()]
@@ -209,7 +196,7 @@ class hr_employee_landing_page(models.TransientModel):
 	def action_view_timesheet_tree(self):
 		self.ensure_one()
 		ir_model_data = self.env['ir.model.data']
-		tree_res = ir_model_data.get_object_reference('hr_timesheet_sheet', 'hr_timesheet_sheet_tree_simplified')
+		tree_res = ir_model_data.get_object_reference('hr_timesheet_sheet', 'hr_timesheet_sheet_tree')
 		tree_id = tree_res and tree_res[1] or False
 		return {
 			'name': _('Timesheet'),

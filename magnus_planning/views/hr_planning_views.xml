@@ -88,8 +88,8 @@
                         <group name="weeks">
                             <label for="planning_quarter" string="Planning Period"/>
                             <div><field name="planning_quarter" domain="[('type_id.name','=','Quarter')]"/></div>
-                            <label for="week_to" string="Timesheet Period"/>
-                            <div style="display: inline;"><field name="week_from" class="oe_inline"/> to <field name="week_to" class="oe_inline"/></div>
+                            <label for="week_to" string="Timesheet Period"  invisible="1"/>
+                            <div style="display: inline;"><field name="week_from" invisible="1" class="oe_inline"/> to <field name="week_to"  invisible="1" class="oe_inline"/></div>
 
                         </group>
                         <group name="dates">
