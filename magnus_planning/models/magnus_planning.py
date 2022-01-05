@@ -737,7 +737,7 @@ class MagnusPlanning(models.Model):
             'project_id': key.project_id.id,
             # 'task_id': key.task_id.id,
             'unit_amount': sum(t.unit_amount for t in matrix[key]),
-            'employee_id': self.employee_id.id,
+            'employee_id': key.employee_id.id,
             'company_id': self.company_id.id,
         }
         if self.id:

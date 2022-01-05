@@ -79,9 +79,9 @@ class HrTimesheetSheet(models.Model):
 		emp_id = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
 		emp_id = emp_id.id if emp_id else False
 		timesheets = self.env['hr_timesheet.sheet'].search([('employee_id', '=', emp_id)])
-		print("----------print timesheet of this employee",emp_id)
+		# print("----------print timesheet of this employee",emp_id)
 		logged_weeks = timesheets.mapped('week_id').ids if timesheets else []
-		print("----------print timesheet generrated",logged_weeks)
+		# print("----------print timesheet generrated",logged_weeks)
 		date_range_type_cw_id = self.env.ref(
 			'magnus_date_range_week.date_range_calender_week').id
 		return [('type_id','=', date_range_type_cw_id), ('active','=',True), ('id', 'not in', logged_weeks)]
