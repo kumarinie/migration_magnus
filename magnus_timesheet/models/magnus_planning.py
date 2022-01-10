@@ -78,10 +78,10 @@ class MagnusPlanning(models.Model):
 			op = 'NOT IN'
 
 		line_query = ("""
-			DELETE FROM magnus_planning_timesheet_analytic_line_rel 
+			DELETE FROM magnus_planning_analytic_line_rel 
 				WHERE planning_id = {0} AND analytic_line_id IN (
 					SELECT id FROM account_analytic_line WHERE id IN 
-					(SELECT analytic_line_id FROM magnus_planning_timesheet_analytic_line_rel WHERE planning_id = {0}) 
+					(SELECT analytic_line_id FROM magnus_planning_analytic_line_rel WHERE planning_id = {0}) 
 						AND employee_id {1} {2}
 					)
 			""".format(
@@ -123,7 +123,7 @@ class MagnusPlanning(models.Model):
 	def get_planning_from_managers(self):
 		line_query = ("""
 						INSERT INTO
-						   magnus_planning_timesheet_analytic_line_rel
+						   magnus_planning_analytic_line_rel
 						   (planning_id, analytic_line_id)
 							SELECT
 								mp.id as planning_id,
@@ -131,13 +131,13 @@ class MagnusPlanning(models.Model):
 							FROM 
 								timesheet_analytic_line aal
 								JOIN magnus_planning mp ON aal.employee_id = mp.employee_id
-								JOIN magnus_planning_timesheet_analytic_line_rel rel ON rel.analytic_line_id = aal.id
+								JOIN magnus_planning_analytic_line_rel rel ON rel.analytic_line_id = aal.id
 								WHERE aal.week_id >= {0} AND aal.week_id <= {1}
 								AND mp.id = {2} 
 						  EXCEPT
 							SELECT
 							  planning_id, analytic_line_id
-							  FROM magnus_planning_timesheet_analytic_line_rel
+							  FROM magnus_planning_analytic_line_rel
 				""".format(
 			self.week_from.id,
 			self.week_to.id,
@@ -161,7 +161,7 @@ class MagnusPlanning(models.Model):
 			print("--------executing query")
 			line_query = ("""
 					INSERT INTO
-					   magnus_planning_timesheet_analytic_line_rel
+					   magnus_planning_analytic_line_rel
 					   (planning_id, analytic_line_id)
 						SELECT 
 							{0}, aal.id 
@@ -169,12 +169,12 @@ class MagnusPlanning(models.Model):
 						  WHERE 
 							aal.week_id >= {1} AND aal.week_id <= {2}
 							AND aal.id IN (
-								SELECT analytic_line_id FROM magnus_planning_timesheet_analytic_line_rel WHERE planning_id IN 
+								SELECT analytic_line_id FROM magnus_planning_analytic_line_rel WHERE planning_id IN 
 								(SELECT id FROM magnus_planning WHERE employee_id {3} {4}))
 						EXCEPT
 							SELECT
 							  planning_id, analytic_line_id
-							  FROM magnus_planning_timesheet_analytic_line_rel
+							  FROM magnus_planning_analytic_line_rel
 					""".format(
 						self.id,
 						self.week_from.id,
@@ -283,7 +283,7 @@ class MagnusPlanning(models.Model):
 	# )
 	planning_analytic_ids = fields.Many2many(
 		'timesheet.analytic.line',
-		'magnus_planning_timesheet_analytic_line_rel',
+		'magnus_planning_analytic_line_rel',
 		'planning_id',
 		'analytic_line_id',
 		string='Planning lines',
